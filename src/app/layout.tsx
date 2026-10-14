@@ -31,6 +31,8 @@ export const metadata: Metadata = {
     description: siteConfig.description
   },
   robots: { index: true, follow: true },
+  // Google Search Console: set this to the code from the HTML tag verification method
+  verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION },
   appleWebApp: { capable: true, title: 'PulsePM', statusBarStyle: 'default' },
   formatDetection: { telephone: false, email: false, address: false }
 };

@@ -1,9 +1,11 @@
 node_modules/
 .next/
+.next-prod/
 out/
 build/
 dist/
 .env
+.env.example
 .env.local
 *.tsbuildinfo
 .DS_Store

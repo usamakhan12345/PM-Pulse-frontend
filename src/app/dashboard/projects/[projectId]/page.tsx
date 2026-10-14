@@ -43,7 +43,9 @@ export default function SingleProjectPage() {
   const { user } = useAppSelector((state) => state.auth);
 
   const [activeTab, setActiveTab] = useState<'board' | 'list' | 'chat' | 'activity'>('board');
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  // Keep only the id and read the task from the store, so the dialog always shows the latest values
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const selectedTask: Task | null = tasks.find((t) => t._id === selectedTaskId) || null;
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [defaultTaskStatus, setDefaultTaskStatus] = useState<TaskStatus>('TODO');
   const [activities, setActivities] = useState<any[]>([]);
@@ -289,7 +291,7 @@ export default function SingleProjectPage() {
       {activeTab === 'board' && (
         <KanbanBoard
           tasks={tasks}
-          onSelectTask={(task) => setSelectedTask(task)}
+          onSelectTask={(task) => setSelectedTaskId(task._id)}
           onStatusChange={handleStatusChange}
           onAddTask={handleOpenAddTask}
         />
@@ -318,7 +320,7 @@ export default function SingleProjectPage() {
                 tasks.map((t) => (
                   <tr
                     key={t._id}
-                    onClick={() => setSelectedTask(t)}
+                    onClick={() => setSelectedTaskId(t._id)}
                     className="hover:bg-gray-50/80 cursor-pointer transition-colors"
                   >
                     <td className="p-4 font-semibold text-gray-900">{t.title}</td>
@@ -381,7 +383,7 @@ export default function SingleProjectPage() {
       <TaskDetailModal
         task={selectedTask}
         isOpen={Boolean(selectedTask)}
-        onClose={() => setSelectedTask(null)}
+        onClose={() => setSelectedTaskId(null)}
       />
 
       {/* Task Create Modal */}

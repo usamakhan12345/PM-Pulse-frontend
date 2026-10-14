@@ -24,7 +24,9 @@ export default function GlobalTasksPage() {
   const [priorityFilter, setPriorityFilter] = useState('');
   const [assignedToFilter, setAssignedToFilter] = useState('');
   const [page, setPage] = useState(1);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  // Keep only the id and read the task from the store, so the dialog always shows the latest values
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const selectedTask: Task | null = tasks.find((t) => t._id === selectedTaskId) || null;
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
 
@@ -158,7 +160,7 @@ export default function GlobalTasksPage() {
               tasks.map((t) => (
                 <tr
                   key={t._id}
-                  onClick={() => setSelectedTask(t)}
+                  onClick={() => setSelectedTaskId(t._id)}
                   className="hover:bg-gray-50/80 cursor-pointer transition-colors"
                 >
                   <td className="p-4 font-semibold text-gray-900">{t.title}</td>
@@ -219,7 +221,7 @@ export default function GlobalTasksPage() {
       <TaskDetailModal
         task={selectedTask}
         isOpen={Boolean(selectedTask)}
-        onClose={() => setSelectedTask(null)}
+        onClose={() => setSelectedTaskId(null)}
       />
 
       {projects.length > 0 && (
