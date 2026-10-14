@@ -82,11 +82,11 @@ export default function ProjectChat({ projectId, workspaceId }: ProjectChatProps
   const typingNames = Object.values(typingUsers);
 
   return (
-    <div className="flex h-[calc(100vh-220px)] bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+    <div className="flex h-[calc(100vh-220px)] min-h-[420px] bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
       {/* Main Chat Thread */}
       <div className="flex-1 flex flex-col h-full bg-slate-50/50">
         {/* Messages Header */}
-        <div className="px-6 py-4 border-b border-gray-200 bg-white flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-white flex items-center justify-between gap-3">
           <div>
             <h3 className="font-bold text-gray-900 text-base"># project-chat</h3>
             <p className="text-xs text-gray-500">Real-time team discussion room</p>
@@ -98,7 +98,7 @@ export default function ProjectChat({ projectId, workspaceId }: ProjectChatProps
         </div>
 
         {/* Message Feed */}
-        <div className="flex-1 p-6 overflow-y-auto space-y-4">
+        <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4">
           {isLoading ? (
             <div className="text-center text-gray-400 py-10">Loading message thread...</div>
           ) : messages.length === 0 ? (

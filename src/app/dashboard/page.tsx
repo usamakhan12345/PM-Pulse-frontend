@@ -6,6 +6,7 @@ import {
   FolderKanban,
   CheckCircle2,
   Clock,
+  ListTodo,
   AlertCircle,
   Users,
   Activity as ActivityIcon,
@@ -14,6 +15,7 @@ import {
   Plus
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
+import { useCanManage } from '@/hooks/useCanManage';
 import { fetchProjects } from '@/store/slices/projectSlice';
 import { fetchTasks } from '@/store/slices/taskSlice';
 import apiClient from '@/api/client';
@@ -49,6 +51,7 @@ export default function DashboardPage() {
 
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((t) => t.status === 'DONE').length;
+  const todoTasks = tasks.filter((t) => t.status === 'TODO').length;
   const inProgressTasks = tasks.filter((t) => t.status === 'IN_PROGRESS').length;
   const pendingTasks = tasks.filter((t) => t.status === 'TODO' || t.status === 'IN_REVIEW').length;
   const blockedTasks = tasks.filter((t) => t.status === 'BLOCKED').length;
@@ -58,7 +61,7 @@ export default function DashboardPage() {
     return new Date(t.dueDate) < new Date();
   }).length;
 
-  const canCreate = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const canCreate = useCanManage();
 
   return (
     <div className="space-y-8">
@@ -69,8 +72,8 @@ export default function DashboardPage() {
             Welcome back, {user?.name}! 👋
           </h2>
           <p className="text-slate-400 text-xs mt-1">
-            {currentWorkspace ? currentWorkspace.name : 'Workspace Dashboard'} • Role:{' '}
-            <span className="font-semibold text-brand-400">{user?.role}</span>
+            {currentWorkspace ? currentWorkspace.name : 'Your workspace'}
+            {user?.role === 'ADMIN' && <span className="font-semibold text-brand-400"> • Administrator</span>}
           </p>
         </div>
         {canCreate && (
@@ -84,7 +87,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
         <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Projects</p>
@@ -102,6 +105,16 @@ export default function DashboardPage() {
           </div>
           <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
             <CheckCircle2 className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">To Do Tasks</p>
+            <p className="text-2xl font-bold text-amber-600 mt-1">{todoTasks}</p>
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+            <ListTodo className="w-5 h-5" />
           </div>
         </div>
 
@@ -143,7 +156,9 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {projects.length === 0 ? (
               <div className="col-span-2 bg-white p-8 rounded-2xl border border-dashed border-gray-300 text-center text-gray-400 text-sm">
-                No active projects found in this workspace.
+                {canCreate
+                  ? 'No projects yet. Create your first one to get started.'
+                  : 'No projects here yet. When the owner creates one, it will show up here.'}
               </div>
             ) : (
               projects.slice(0, 4).map((p) => (

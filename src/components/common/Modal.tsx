@@ -32,7 +32,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className={`relative bg-white rounded-xl shadow-2xl w-full ${maxWidth} overflow-hidden transform transition-all`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
           <button
             onClick={onClose}
@@ -43,7 +43,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
         </div>
 
         {/* Content */}
-        <div className="p-6 max-h-[80vh] overflow-y-auto">{children}</div>
+        <div className="p-4 sm:p-6 max-h-[80vh] overflow-y-auto">{children}</div>
       </div>
     </div>
   );

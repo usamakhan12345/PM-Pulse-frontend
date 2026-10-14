@@ -6,6 +6,7 @@ import { useAppDispatch } from '@/store';
 import { createTask } from '@/store/slices/taskSlice';
 import { TaskPriority, TaskStatus, User } from '@/types';
 import apiClient from '@/api/client';
+import { loadAssignees } from '@/lib/assignees';
 
 interface TaskCreateModalProps {
   isOpen: boolean;
@@ -36,11 +37,9 @@ export default function TaskCreateModal({
   useEffect(() => {
     setStatus(defaultStatus);
     if (isOpen) {
-      apiClient.get('/users').then((res) => {
-        setUsers(res.data.data.users || []);
-      });
+      loadAssignees(projectId).then(setUsers).catch(() => setUsers([]));
     }
-  }, [isOpen, defaultStatus]);
+  }, [isOpen, defaultStatus, projectId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +101,7 @@ export default function TaskCreateModal({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
               Priority
@@ -137,7 +136,7 @@ export default function TaskCreateModal({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
               Assignee
@@ -150,7 +149,7 @@ export default function TaskCreateModal({
               <option value="">Unassigned</option>
               {users.map((u) => (
                 <option key={u._id} value={u._id}>
-                  {u.name} ({u.role})
+                  {u.name}
                 </option>
               ))}
             </select>

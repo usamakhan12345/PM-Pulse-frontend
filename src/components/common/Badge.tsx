@@ -1,9 +1,9 @@
 import React from 'react';
-import { TaskPriority, TaskStatus, Role } from '@/types';
+import { TaskPriority, TaskStatus, Role, WorkspaceRole } from '@/types';
 
 interface BadgeProps {
   type: 'status' | 'priority' | 'role';
-  value: TaskStatus | TaskPriority | Role | string;
+  value: TaskStatus | TaskPriority | Role | WorkspaceRole | string;
   className?: string;
 }
 
@@ -48,10 +48,10 @@ export default function Badge({ type, value, className = '' }: BadgeProps) {
       case 'ADMIN':
         bg = 'bg-purple-100 text-purple-800 font-bold';
         break;
-      case 'MANAGER':
+      case 'OWNER':
         bg = 'bg-blue-100 text-blue-800 font-semibold';
         break;
-      case 'EMPLOYEE':
+      case 'MEMBER':
         bg = 'bg-gray-100 text-gray-700';
         break;
     }
@@ -59,7 +59,7 @@ export default function Badge({ type, value, className = '' }: BadgeProps) {
 
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bg} ${className}`}>
-      {value.replace('_', ' ')}
+      {type === 'role' ? value.charAt(0) + value.slice(1).toLowerCase() : value.replace('_', ' ')}
     </span>
   );
 }

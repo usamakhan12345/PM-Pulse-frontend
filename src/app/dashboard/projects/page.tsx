@@ -2,10 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FolderKanban, Plus, Search, Filter, Calendar, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FolderKanban, Plus, Search, Filter, Calendar, Users, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
+import { useCanManage } from '@/hooks/useCanManage';
 import { fetchProjects } from '@/store/slices/projectSlice';
 import Badge from '@/components/common/Badge';
+import Select from '@/components/common/Select';
 import ProjectCreateModal from '@/components/projects/ProjectCreateModal';
 import { ProjectStatus } from '@/types';
 
@@ -24,7 +26,7 @@ export default function ProjectsPage() {
     if (currentWorkspace) {
       dispatch(
         fetchProjects({
-          workspaceId: currentWorkspace._id,
+          workspaceId: currentWorkspace?._id,
           search,
           status: statusFilter || undefined,
           page
@@ -33,7 +35,7 @@ export default function ProjectsPage() {
     }
   }, [dispatch, currentWorkspace, search, statusFilter, page]);
 
-  const canCreate = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const canCreate = useCanManage();
 
   return (
     <div className="space-y-6">
@@ -70,18 +72,21 @@ export default function ProjectsPage() {
           <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
             <Filter className="w-4 h-4" /> Status:
           </div>
-          <select
+          <Select
+            label="Status"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="">All Statuses</option>
-            <option value="ACTIVE">Active</option>
-            <option value="PLANNING">Planning</option>
-            <option value="ON_HOLD">On Hold</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="ARCHIVED">Archived</option>
-          </select>
+            onChange={setStatusFilter}
+            align="right"
+            className="flex-1 sm:flex-none sm:w-44"
+            options={[
+              { value: '', label: 'All Statuses' },
+              { value: 'ACTIVE', label: 'Active' },
+              { value: 'PLANNING', label: 'Planning' },
+              { value: 'ON_HOLD', label: 'On Hold' },
+              { value: 'COMPLETED', label: 'Completed' },
+              { value: 'ARCHIVED', label: 'Archived' }
+            ]}
+          />
         </div>
       </div>
 
@@ -89,8 +94,23 @@ export default function ProjectsPage() {
       {isLoading ? (
         <div className="text-center py-12 text-sm text-gray-400">Loading projects...</div>
       ) : projects.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-12 text-center text-gray-400 text-sm">
-          No projects found matching the criteria.
+        <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-12 text-center text-sm">
+          {search || statusFilter ? (
+            <p className="text-gray-400">No projects match your search.</p>
+          ) : canCreate ? (
+            <>
+              <p className="font-semibold text-gray-700">No projects yet</p>
+              <p className="mt-1 text-gray-400">Create your first project, then invite people to work on it.</p>
+            </>
+          ) : (
+            <>
+              <p className="font-semibold text-gray-700">No projects in {currentWorkspace?.name || 'this workspace'} yet</p>
+              <p className="mt-1 text-gray-400 max-w-md mx-auto">
+                When the workspace owner creates a project it will show up here. Private projects only show to the people added to them.
+                If you also have your own workspace, you can switch to it from the menu at the top.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -102,7 +122,14 @@ export default function ProjectsPage() {
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <Badge type="status" value={p.status} />
+                  <span className="flex items-center gap-2">
+                    <Badge type="status" value={p.status} />
+                    {p.isPrivate && (
+                      <span title="Private: only the team can see this project" className="text-gray-400">
+                        <Lock className="w-3.5 h-3.5" aria-label="Private project" />
+                      </span>
+                    )}
+                  </span>
                   <span className="text-[11px] text-gray-400 font-medium">
                     {p.dueDate ? `Due ${new Date(p.dueDate).toLocaleDateString()}` : 'No due date'}
                   </span>
@@ -114,6 +141,39 @@ export default function ProjectsPage() {
                   {p.description || 'No description provided.'}
                 </p>
               </div>
+
+              {(() => {
+                const stats = p.taskStats;
+                const total = stats?.total || 0;
+                const done = stats?.DONE || 0;
+                const percent = total ? Math.round((done / total) * 100) : 0;
+                return (
+                  <div className="mb-5">
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      <div className="rounded-xl bg-amber-50 px-2 py-2 text-center">
+                        <p className="text-lg font-bold text-amber-600 leading-none">{stats?.TODO || 0}</p>
+                        <p className="text-[10px] font-semibold text-amber-700/70 uppercase tracking-wide mt-1">To Do</p>
+                      </div>
+                      <div className="rounded-xl bg-brand-50 px-2 py-2 text-center">
+                        <p className="text-lg font-bold text-brand-600 leading-none">{stats?.IN_PROGRESS || 0}</p>
+                        <p className="text-[10px] font-semibold text-brand-700/70 uppercase tracking-wide mt-1">In Progress</p>
+                      </div>
+                      <div className="rounded-xl bg-emerald-50 px-2 py-2 text-center">
+                        <p className="text-lg font-bold text-emerald-600 leading-none">{done}</p>
+                        <p className="text-[10px] font-semibold text-emerald-700/70 uppercase tracking-wide mt-1">Completed</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                        <div className="h-full rounded-full bg-emerald-500" style={{ width: `${percent}%` }} />
+                      </div>
+                      <span className="text-[11px] font-semibold text-gray-500 tabular-nums">
+                        {total ? `${percent}% of ${total} tasks` : 'No tasks yet'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
                 <div className="flex items-center gap-1">

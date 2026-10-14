@@ -37,4 +37,11 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Turns an uploaded file path like /uploads/avatars/x.png into a full URL on the API server
+export const assetUrl = (path?: string | null): string => {
+  if (!path) return '';
+  if (/^(https?:)?\/\//.test(path) || path.startsWith('data:') || path.startsWith('blob:')) return path;
+  return `${API_BASE.replace(/\/api\/?$/, '')}${path}`;
+};
+
 export default apiClient;

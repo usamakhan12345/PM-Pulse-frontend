@@ -1,4 +1,5 @@
 import React from 'react';
+import { assetUrl } from '@/api/client';
 
 interface AvatarProps {
   name: string;
@@ -24,7 +25,7 @@ export default function Avatar({ name, src, size = 'md', className = '' }: Avata
   if (src) {
     return (
       <img
-        src={src}
+        src={assetUrl(src)}
         alt={name}
         className={`${sizeClasses[size]} rounded-full object-cover border border-gray-200 ${className}`}
       />

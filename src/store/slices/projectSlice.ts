@@ -20,7 +20,7 @@ const initialState: ProjectState = {
 
 export const fetchProjects = createAsyncThunk(
   'project/fetchProjects',
-  async (params: { workspaceId: string; search?: string; status?: string; page?: number; limit?: number }, { rejectWithValue }) => {
+  async (params: { workspaceId?: string; search?: string; status?: string; page?: number; limit?: number }, { rejectWithValue }) => {
     try {
       const res = await apiClient.get('/projects', { params });
       return {

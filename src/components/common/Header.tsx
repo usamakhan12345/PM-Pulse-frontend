@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bell, LogOut, ChevronDown, Plus, Layers, User as UserIcon } from 'lucide-react';
+import { Bell, LogOut, ChevronDown, Plus, Layers, Menu, Download, User as UserIcon } from 'lucide-react';
+import { usePwaInstall } from '@/lib/pwa';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { logout } from '@/store/slices/authSlice';
 import { fetchWorkspaces, setCurrentWorkspace } from '@/store/slices/workspaceSlice';
@@ -11,7 +12,11 @@ import { fetchNotifications } from '@/store/slices/notificationSlice';
 import Avatar from './Avatar';
 import Badge from './Badge';
 
-export default function Header() {
+interface HeaderProps {
+  onMenuClick: () => void;
+}
+
+export default function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
@@ -19,6 +24,8 @@ export default function Header() {
   const { unreadCount } = useAppSelector((state) => state.notification);
   const [isWorkspaceDropdownOpen, setIsWorkspaceDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+
+  const { canInstall, install } = usePwaInstall();
 
   useEffect(() => {
     dispatch(fetchWorkspaces());
@@ -31,9 +38,18 @@ export default function Header() {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 sticky top-0 z-30 flex items-center justify-between px-6 shadow-sm">
-      {/* Left: Workspace Selector */}
-      <div className="flex items-center gap-4">
+    <header className="h-16 bg-white border-b border-gray-200 sticky top-0 z-30 flex items-center justify-between gap-2 px-4 sm:px-6 shadow-sm">
+      {/* Left: Menu button (phones and tablets) and Workspace Selector */}
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+        <button
+          type="button"
+          onClick={onMenuClick}
+          aria-label="Open menu"
+          aria-controls="sidebar"
+          className="lg:hidden p-2 -ml-2 rounded-lg text-gray-600 hover:bg-gray-100 shrink-0"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
         <div className="relative">
           <button
             onClick={() => setIsWorkspaceDropdownOpen(!isWorkspaceDropdownOpen)}
@@ -42,14 +58,14 @@ export default function Header() {
             <div className="w-6 h-6 rounded bg-brand-500 text-white flex items-center justify-center font-bold text-xs">
               {currentWorkspace ? currentWorkspace.name[0].toUpperCase() : 'W'}
             </div>
-            <span className="font-semibold text-gray-800 text-sm max-w-[180px] truncate">
+            <span className="font-semibold text-gray-800 text-sm max-w-[110px] sm:max-w-[180px] truncate">
               {currentWorkspace ? currentWorkspace.name : 'Select Workspace'}
             </span>
             <ChevronDown className="w-4 h-4 text-gray-500" />
           </button>
 
           {isWorkspaceDropdownOpen && (
-            <div className="absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+            <div className="absolute left-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
               <div className="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 Workspaces
               </div>
@@ -83,9 +99,13 @@ export default function Header() {
       </div>
 
       {/* Right: Notifications, User Profile & Role */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
         {/* User Role Badge */}
-        {user && <Badge type="role" value={user.role} />}
+        {user?.role === 'ADMIN' && (
+          <span className="hidden sm:inline-flex">
+            <Badge type="role" value="ADMIN" />
+          </span>
+        )}
 
         {/* Notifications Icon */}
         <Link
@@ -114,6 +134,11 @@ export default function Header() {
               <div className="px-4 py-2 border-b border-gray-100">
                 <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
                 <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                {user?.role === 'ADMIN' && (
+                  <div className="mt-1.5 sm:hidden">
+                    <Badge type="role" value="ADMIN" />
+                  </div>
+                )}
               </div>
               <Link
                 href="/dashboard/settings"
@@ -122,6 +147,17 @@ export default function Header() {
               >
                 <UserIcon className="w-4 h-4 text-gray-500" /> Account Settings
               </Link>
+              {canInstall && (
+                <button
+                  onClick={async () => {
+                    setIsUserDropdownOpen(false);
+                    await install();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <Download className="w-4 h-4 text-gray-500" /> Install app
+                </button>
+              )}
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium"

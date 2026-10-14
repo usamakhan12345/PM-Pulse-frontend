@@ -1,4 +1,7 @@
-export type Role = 'ADMIN' | 'MANAGER' | 'EMPLOYEE';
+// ADMIN is the platform owner. Everyone else is a USER.
+export type Role = 'ADMIN' | 'USER';
+// A person's role inside one workspace
+export type WorkspaceRole = 'OWNER' | 'MEMBER';
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE' | 'BLOCKED';
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type ProjectStatus = 'PLANNING' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'ARCHIVED';
@@ -18,7 +21,7 @@ export interface Workspace {
   slug: string;
   description?: string;
   ownerId: string | User;
-  memberRole?: Role;
+  memberRole?: WorkspaceRole;
   createdAt?: string;
 }
 
@@ -26,7 +29,7 @@ export interface WorkspaceMember {
   _id: string;
   user: User;
   workspace: string;
-  role: Role;
+  role: WorkspaceRole;
   status: 'ACTIVE' | 'INVITED' | 'INACTIVE';
   joinedAt: string;
 }
@@ -39,6 +42,7 @@ export interface Project {
   ownerId: User | string;
   members: User[];
   status: ProjectStatus;
+  isPrivate?: boolean;
   startDate?: string;
   dueDate?: string;
   taskStats?: {

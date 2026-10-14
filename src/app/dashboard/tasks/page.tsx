@@ -7,6 +7,7 @@ import { fetchTasks, updateTaskStatus } from '@/store/slices/taskSlice';
 import TaskDetailModal from '@/components/tasks/TaskDetailModal';
 import TaskCreateModal from '@/components/tasks/TaskCreateModal';
 import Badge from '@/components/common/Badge';
+import Select from '@/components/common/Select';
 import Avatar from '@/components/common/Avatar';
 import { Task, TaskStatus, TaskPriority, User } from '@/types';
 import apiClient from '@/api/client';
@@ -31,7 +32,7 @@ export default function GlobalTasksPage() {
     if (currentWorkspace) {
       dispatch(
         fetchTasks({
-          workspaceId: currentWorkspace._id,
+          workspaceId: currentWorkspace?._id,
           search,
           status: statusFilter || undefined,
           priority: priorityFilter || undefined,
@@ -40,13 +41,14 @@ export default function GlobalTasksPage() {
         })
       );
 
-      apiClient.get('/users').then((res) => {
-        setUsers(res.data.data.users || []);
+      // Only the people in this workspace, never everyone on the platform
+      apiClient.get(`/workspaces/${currentWorkspace._id}/members`).then((res) => {
+        setUsers((res.data.data.members || []).map((m: any) => m.user));
       });
     }
   }, [dispatch, currentWorkspace, search, statusFilter, priorityFilter, assignedToFilter, page]);
 
-  const canCreate = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const canCreate = projects.length > 0;
 
   return (
     <div className="space-y-6">
@@ -82,50 +84,53 @@ export default function GlobalTasksPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <select
+          <Select
+            label="Status"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="">All Statuses</option>
-            <option value="TODO">To Do</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="IN_REVIEW">In Review</option>
-            <option value="DONE">Done</option>
-            <option value="BLOCKED">Blocked</option>
-          </select>
+            onChange={setStatusFilter}
+            className="flex-1 min-w-[140px] sm:flex-none sm:w-40"
+            options={[
+              { value: '', label: 'All Statuses' },
+              { value: 'TODO', label: 'To Do' },
+              { value: 'IN_PROGRESS', label: 'In Progress' },
+              { value: 'IN_REVIEW', label: 'In Review' },
+              { value: 'DONE', label: 'Done' },
+              { value: 'BLOCKED', label: 'Blocked' }
+            ]}
+          />
 
-          <select
+          <Select
+            label="Priority"
             value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="">All Priorities</option>
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
-            <option value="URGENT">Urgent</option>
-          </select>
+            onChange={setPriorityFilter}
+            className="flex-1 min-w-[140px] sm:flex-none sm:w-40"
+            options={[
+              { value: '', label: 'All Priorities' },
+              { value: 'LOW', label: 'Low' },
+              { value: 'MEDIUM', label: 'Medium' },
+              { value: 'HIGH', label: 'High' },
+              { value: 'URGENT', label: 'Urgent' }
+            ]}
+          />
 
-          <select
+          <Select
+            label="Assignee"
             value={assignedToFilter}
-            onChange={(e) => setAssignedToFilter(e.target.value)}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="">All Assignees</option>
-            {user && <option value={user._id}>Assigned to Me</option>}
-            {users.map((u) => (
-              <option key={u._id} value={u._id}>
-                {u.name}
-              </option>
-            ))}
-          </select>
+            onChange={setAssignedToFilter}
+            align="right"
+            className="flex-1 min-w-[160px] sm:flex-none sm:w-48"
+            options={[
+              { value: '', label: 'All Assignees' },
+              ...(user ? [{ value: user._id, label: 'Assigned to Me' }] : []),
+              ...users.map((u) => ({ value: u._id, label: u.name, hint: u.email }))
+            ]}
+          />
         </div>
       </div>
 
       {/* Task Table */}
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-        <table className="w-full text-left text-xs">
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-x-auto shadow-sm">
+        <table className="w-full min-w-[720px] text-left text-xs">
           <thead className="bg-gray-50 border-b border-gray-200 text-gray-400 font-semibold uppercase tracking-wider">
             <tr>
               <th className="p-4">Task Title</th>

@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Kanban, ArrowRight, Lock, Mail } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { loginUser, clearAuthError } from '@/store/slices/authSlice';
+import { getNextPath, withNext } from '@/lib/nav';
+import AuthBackdrop from '@/components/auth/AuthBackdrop';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,33 +16,34 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [next, setNext] = useState('');
+
+  useEffect(() => {
+    setNext(getNextPath());
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(clearAuthError());
     const res = await dispatch(loginUser({ email, password }));
     if (res.meta.requestStatus === 'fulfilled') {
-      router.push('/dashboard');
+      router.push(next || '/dashboard');
     }
   };
 
-  const fillDemo = (roleEmail: string) => {
-    setEmail(roleEmail);
-    setPassword('Password123!');
-  };
-
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+    <div className="relative min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-6 lg:px-8 overflow-hidden">
+      <AuthBackdrop />
+      <div className="relative sm:mx-auto sm:w-full sm:max-w-md text-center">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-500 to-indigo-600 text-white shadow-xl mb-4">
           <Kanban className="w-8 h-8" />
         </div>
-        <h2 className="text-3xl font-extrabold text-white tracking-tight">PulsePM</h2>
-        <p className="mt-1 text-sm text-slate-400">Enterprise Jira + Slack Project Platform</p>
+        <h1 className="text-3xl font-extrabold text-white tracking-tight">Sign in to PulsePM</h1>
+        <p className="mt-1 text-sm text-slate-400">Welcome back. Enter your details to continue.</p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-slate-900 border border-slate-800 py-8 px-8 shadow-2xl rounded-2xl space-y-6">
+      <div className="relative mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700/60 py-8 px-5 sm:px-8 shadow-2xl shadow-black/40 rounded-2xl space-y-6">
           {error && (
             <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl font-medium">
               {error}
@@ -100,37 +103,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Quick Demo Credentials */}
-          <div className="pt-4 border-t border-slate-800">
-            <p className="text-xs font-medium text-slate-400 mb-2.5 text-center">Quick Demo Accounts:</p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => fillDemo('admin@example.com')}
-                className="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors"
-              >
-                Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemo('manager@example.com')}
-                className="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors"
-              >
-                Manager
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemo('employee1@example.com')}
-                className="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors"
-              >
-                Employee
-              </button>
-            </div>
-          </div>
-
           <p className="text-center text-xs text-slate-400 pt-2">
             Don't have an account?{' '}
-            <Link href="/register" className="text-brand-400 font-semibold hover:underline">
+            <Link href={withNext('/register', next)} className="text-brand-400 font-semibold hover:underline">
               Create Account
             </Link>
           </p>

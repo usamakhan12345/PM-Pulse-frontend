@@ -38,16 +38,33 @@ export const loginUser = createAsyncThunk('auth/login', async (credentials: any,
   }
 });
 
-export const registerUser = createAsyncThunk('auth/register', async (formData: any, { rejectWithValue }) => {
-  try {
-    const res = await apiClient.post('/auth/register', formData);
-    const { token, user } = res.data.data;
-    localStorage.setItem('token', token);
-    return { token, user };
-  } catch (err: any) {
-    return rejectWithValue(err.message || 'Registration failed');
+// Step 1 of sign up: the server emails a code. No account or token exists yet.
+export const registerUser = createAsyncThunk(
+  'auth/register',
+  async (formData: { name: string; email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post('/auth/register', formData);
+      return res.data.data as { email: string; expiresInSeconds: number; resendAfterSeconds: number };
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Registration failed');
+    }
   }
-});
+);
+
+// Step 2 of sign up: a valid code creates the account and signs the user in.
+export const verifySignupOtp = createAsyncThunk(
+  'auth/verifyOtp',
+  async (payload: { email: string; otp: string }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post('/auth/verify-otp', payload);
+      const { token, user } = res.data.data;
+      localStorage.setItem('token', token);
+      return { token, user };
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Verification failed');
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: 'auth',
@@ -104,20 +121,35 @@ const authSlice = createSlice({
         state.error = action.payload;
       });
 
-    // Register
+    // Register (sends the code only)
     builder
       .addCase(registerUser.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(registerUser.rejected, (state, action: PayloadAction<any>) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      });
+
+    // Verify sign-up code (creates the account and signs in)
+    builder
+      .addCase(verifySignupOtp.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(verifySignupOtp.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.isLoading = false;
         state.error = null;
       })
-      .addCase(registerUser.rejected, (state, action: PayloadAction<any>) => {
+      .addCase(verifySignupOtp.rejected, (state, action: PayloadAction<any>) => {
         state.isLoading = false;
         state.error = action.payload;
       });
