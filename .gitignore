@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+.env
+.env.local
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
