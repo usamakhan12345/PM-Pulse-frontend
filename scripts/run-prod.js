@@ -33,8 +33,8 @@ for (const line of fs.readFileSync(envFile, 'utf8').split(/\r?\n/)) {
 const env = { ...process.env, ...prodEnv, NODE_ENV: 'production', NEXT_DIST_DIR: '.next-prod', NEXT_TELEMETRY_DISABLED: '1' };
 const nextBin = require.resolve('next/dist/bin/next', { paths: [root] });
 
-console.log(`Using API:    ${env.NEXT_PUBLIC_API_URL}`);
-console.log(`Using socket: ${env.NEXT_PUBLIC_SOCKET_URL}`);
+console.log(`Using API:    ${env.API_URL}`);
+console.log(`Using socket: ${env.SOCKET_URL}`);
 
 if (!skipBuild) {
   console.log('\nBuilding...');
