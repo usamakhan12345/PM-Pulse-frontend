@@ -209,7 +209,14 @@ const eyebrow = 'text-xs font-semibold uppercase tracking-[0.18em] text-brand-40
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 scroll-smooth overflow-x-clip">
+    <div className="relative min-h-screen bg-gradient-to-b from-slate-950 via-[#08102b] to-slate-950 text-slate-200 scroll-smooth overflow-x-clip">
+      {/* Light colour washes down the page, so the dark background is not one flat colour */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        <div className="absolute top-[16%] -right-40 h-[560px] w-[560px] rounded-full bg-sky-500/[0.12] blur-[140px]" />
+        <div className="absolute top-[38%] -left-48 h-[600px] w-[600px] rounded-full bg-indigo-500/[0.14] blur-[150px]" />
+        <div className="absolute top-[60%] -right-44 h-[560px] w-[560px] rounded-full bg-violet-500/[0.12] blur-[150px]" />
+        <div className="absolute top-[82%] -left-32 h-[520px] w-[520px] rounded-full bg-brand-500/[0.18] blur-[140px]" />
+      </div>
       <ScrollProgress />
       <AuthRedirect />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
@@ -257,13 +264,13 @@ export default function HomePage() {
         </ul>
       </header>
 
-      <main>
+      <main className="relative z-10">
         {/* Hero */}
         <section className="relative overflow-hidden">
-          <AuthBackdrop />
+          <AuthBackdrop soft />
           <div
             aria-hidden="true"
-            className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(60%_60%_at_50%_0%,rgba(0,82,204,0.28),transparent)] animate-glow-pulse motion-reduce:animate-none"
+            className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(60%_60%_at_50%_0%,rgba(0,82,204,0.14),transparent)] animate-glow-pulse motion-reduce:animate-none"
           />
           <div className="relative max-w-6xl mx-auto px-6 pt-16 sm:pt-24 pb-16">
             <div className="max-w-3xl mx-auto text-center">
@@ -654,7 +661,7 @@ export default function HomePage() {
         </section>
       </main>
 
-      <footer className="border-t border-slate-800/80">
+      <footer className="relative z-10 border-t border-slate-800/80">
         <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
           <div className="col-span-2">
             <Link href="/" className="flex items-center gap-2.5 font-bold text-white text-lg">
