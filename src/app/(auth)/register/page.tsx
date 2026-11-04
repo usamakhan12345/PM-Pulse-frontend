@@ -9,6 +9,7 @@ import { registerUser, verifySignupOtp, clearAuthError } from '@/store/slices/au
 import apiClient from '@/api/client';
 import OtpInput from '@/components/auth/OtpInput';
 import { getNextPath, withNext } from '@/lib/nav';
+import AuthBackdrop from '@/components/auth/AuthBackdrop';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -75,8 +76,9 @@ export default function RegisterPage() {
     'w-full pl-9 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500';
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+    <div className="relative min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-6 lg:px-8 overflow-hidden">
+      <AuthBackdrop />
+      <div className="relative sm:mx-auto sm:w-full sm:max-w-md text-center">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-500 to-indigo-600 text-white shadow-xl mb-4">
           {step === 'otp' ? <MailCheck className="w-8 h-8" /> : <Kanban className="w-8 h-8" />}
         </div>
@@ -94,8 +96,8 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-slate-900 border border-slate-800 py-8 px-5 sm:px-8 shadow-2xl rounded-2xl space-y-6">
+      <div className="relative mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700/60 py-8 px-5 sm:px-8 shadow-2xl shadow-black/40 rounded-2xl space-y-6">
           {error && (
             <div role="alert" className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl font-medium">
               {error}
