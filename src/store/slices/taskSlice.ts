@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createAction, PayloadAction } from '@reduxjs/toolkit';
 import apiClient from '@/api/client';
 import { Task, TaskStatus, PaginationMeta } from '@/types';
 
@@ -51,13 +51,20 @@ export const createTask = createAsyncThunk('task/create', async (data: any, { re
   }
 });
 
+// Moves a card on screen straight away, before the server has answered
+export const taskStatusMoved = createAction<{ taskId: string; status: TaskStatus }>('task/statusMoved');
+
 export const updateTaskStatus = createAsyncThunk(
   'task/updateStatus',
-  async ({ taskId, status }: { taskId: string; status: TaskStatus }, { rejectWithValue }) => {
+  async ({ taskId, status }: { taskId: string; status: TaskStatus }, { dispatch, getState, rejectWithValue }) => {
+    // Drag and drop should feel instant: move the card now and put it back if the server refuses
+    const previous = (getState() as { task: TaskState }).task.tasks.find((t) => t._id === taskId)?.status;
+    dispatch(taskStatusMoved({ taskId, status }));
     try {
       const res = await apiClient.patch(`/tasks/${taskId}`, { status });
       return res.data.data.task;
     } catch (err: any) {
+      if (previous) dispatch(taskStatusMoved({ taskId, status: previous }));
       return rejectWithValue(err.message || 'Failed to update task status');
     }
   }
@@ -116,6 +123,11 @@ const taskSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(taskStatusMoved, (state, action) => {
+        const task = state.tasks.find((t) => t._id === action.payload.taskId);
+        if (task) task.status = action.payload.status;
+        if (state.currentTask?._id === action.payload.taskId) state.currentTask.status = action.payload.status;
+      })
       .addCase(fetchTasks.pending, (state) => {
         state.isLoading = true;
       })

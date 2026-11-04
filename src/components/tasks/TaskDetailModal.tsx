@@ -10,6 +10,8 @@ import apiClient, { assetUrl } from '@/api/client';
 import { loadAssignees } from '@/lib/assignees';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { useCanManage } from '@/hooks/useCanManage';
+import { useProjectColumns } from '@/hooks/useProjectColumns';
+import { statusTitle } from '@/lib/columns';
 import { updateTask, deleteTask } from '@/store/slices/taskSlice';
 import {
   CalendarDays,
@@ -31,14 +33,6 @@ interface TaskDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const statusOptions = [
-  { value: 'TODO', label: 'To Do' },
-  { value: 'IN_PROGRESS', label: 'In Progress' },
-  { value: 'IN_REVIEW', label: 'In Review' },
-  { value: 'DONE', label: 'Done' },
-  { value: 'BLOCKED', label: 'Blocked' }
-];
 
 const priorityOptions = [
   { value: 'LOW', label: 'Low' },
@@ -79,6 +73,12 @@ export default function TaskDetailModal({ task, isOpen, onClose }: TaskDetailMod
   const [users, setUsers] = useState<User[]>([]);
   const [uploading, setUploading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // The status list follows the columns of the task's own project, including any the owner added
+  const projectIdOfTask = task ? (typeof task.projectId === 'string' ? task.projectId : task.projectId._id) : undefined;
+  const columns = useProjectColumns(projectIdOfTask);
+  const statusOptions = columns.some((c) => c.status === task?.status)
+    ? columns.map((c) => ({ value: c.status, label: c.title }))
+    : [...columns.map((c) => ({ value: c.status, label: c.title })), ...(task ? [{ value: task.status, label: statusTitle(columns, task.status) }] : [])];
 
   useEffect(() => {
     if (task && isOpen) {
@@ -152,7 +152,7 @@ export default function TaskDetailModal({ task, isOpen, onClose }: TaskDetailMod
       <div className="space-y-6">
         {/* At a glance */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <Badge type="status" value={task.status} />
+          <Badge type="status" value={task.status} label={statusTitle(columns, task.status)} />
           <Badge type="priority" value={task.priority} />
           {projectName && (
             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500">

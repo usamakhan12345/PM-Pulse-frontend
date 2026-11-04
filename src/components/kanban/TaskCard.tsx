@@ -4,20 +4,19 @@ import React from 'react';
 import { CalendarDays, ChevronDown, Flag } from 'lucide-react';
 import { Task, TaskPriority, TaskStatus } from '@/types';
 import Avatar from '../common/Avatar';
+import { BoardColumn, statusTitle } from '@/lib/columns';
 
 interface TaskCardProps {
   task: Task;
+  /** The project's columns, for the status list on the card */
+  columns: BoardColumn[];
   onSelect: (task: Task) => void;
   onStatusChange: (taskId: string, newStatus: TaskStatus) => void;
+  /** True while this card is the one being dragged, so it can look lifted out of its place. */
+  isDragging?: boolean;
+  onDragStart?: (task: Task) => void;
+  onDragEnd?: () => void;
 }
-
-const statusOptions: { value: TaskStatus; label: string; dot: string }[] = [
-  { value: 'TODO', label: 'To Do', dot: 'bg-slate-400' },
-  { value: 'IN_PROGRESS', label: 'In Progress', dot: 'bg-brand-500' },
-  { value: 'IN_REVIEW', label: 'In Review', dot: 'bg-amber-500' },
-  { value: 'DONE', label: 'Done', dot: 'bg-emerald-500' },
-  { value: 'BLOCKED', label: 'Blocked', dot: 'bg-rose-500' }
-];
 
 const priorityStyles: Record<TaskPriority, { label: string; chip: string }> = {
   LOW: { label: 'Low', chip: 'bg-slate-100 text-slate-600' },
@@ -26,16 +25,32 @@ const priorityStyles: Record<TaskPriority, { label: string; chip: string }> = {
   URGENT: { label: 'Urgent', chip: 'bg-red-50 text-red-700' }
 };
 
-export default function TaskCard({ task, onSelect, onStatusChange }: TaskCardProps) {
+export default function TaskCard({ task, columns, onSelect, onStatusChange, isDragging, onDragStart, onDragEnd }: TaskCardProps) {
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', task._id); // Firefox needs data set before it starts a drag
+    // Update the board a moment later, so the picture the browser drags is the card as it looked at the start
+    setTimeout(() => onDragStart?.(task), 0);
+  };
+
   const priority = priorityStyles[task.priority] || priorityStyles.MEDIUM;
-  const currentStatus = statusOptions.find((s) => s.value === task.status) || statusOptions[0];
+  // The project's columns, plus the task's own status if it is somehow not among them
+  const statusOptions = columns.some((c) => c.status === task.status)
+    ? columns
+    : [...columns, { status: task.status, title: statusTitle(columns, task.status), colorClass: 'bg-slate-400', custom: false }];
+  const currentStatus = statusOptions.find((s) => s.status === task.status) || statusOptions[0];
   const isOverdue = !!task.dueDate && task.status !== 'DONE' && new Date(task.dueDate) < new Date();
   const extraLabels = (task.labels?.length || 0) - 3;
 
   return (
     <div
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={() => onDragEnd?.()}
       onClick={() => onSelect(task)}
-      className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md hover:border-brand-300 transition-all cursor-pointer group flex flex-col gap-3"
+      className={`bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md hover:border-brand-300 transition-all cursor-grab active:cursor-grabbing group flex flex-col gap-3 ${
+        isDragging ? 'opacity-40 scale-[0.97] border-dashed border-brand-400' : ''
+      }`}
     >
       {/* Priority and due date */}
       <div className="flex items-center justify-between gap-2">
@@ -93,7 +108,7 @@ export default function TaskCard({ task, onSelect, onStatusChange }: TaskCardPro
 
         <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
           <span
-            className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full pointer-events-none ${currentStatus.dot}`}
+            className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full pointer-events-none ${currentStatus.colorClass}`}
           />
           <select
             value={task.status}
@@ -102,8 +117,8 @@ export default function TaskCard({ task, onSelect, onStatusChange }: TaskCardPro
             className="appearance-none bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 text-[11px] font-medium rounded-lg pl-6 pr-6 py-1.5 focus:ring-1 focus:ring-brand-500 outline-none cursor-pointer transition-colors"
           >
             {statusOptions.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
+              <option key={s.status} value={s.status}>
+                {s.title}
               </option>
             ))}
           </select>
