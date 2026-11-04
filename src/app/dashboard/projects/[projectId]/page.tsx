@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { useCanManage } from '@/hooks/useCanManage';
+import { useProjectColumns } from '@/hooks/useProjectColumns';
+import { statusTitle } from '@/lib/columns';
 import ProjectStatusMenu from '@/components/projects/ProjectStatusMenu';
 import { fetchProjectById } from '@/store/slices/projectSlice';
 import { fetchTasks, updateTaskStatus } from '@/store/slices/taskSlice';
@@ -41,6 +43,8 @@ export default function SingleProjectPage() {
   const { tasks } = useAppSelector((state) => state.task);
   const { currentWorkspace } = useAppSelector((state) => state.workspace);
   const { user } = useAppSelector((state) => state.auth);
+
+  const columns = useProjectColumns(projectId);
 
   const [activeTab, setActiveTab] = useState<'board' | 'list' | 'chat' | 'activity'>('board');
   // Keep only the id and read the task from the store, so the dialog always shows the latest values
@@ -82,6 +86,27 @@ export default function SingleProjectPage() {
 
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
     await dispatch(updateTaskStatus({ taskId, status: newStatus }));
+  };
+
+  // Extra Kanban columns (such as "UAT Ready"). The server only lets the workspace owner do this.
+  // Resolves to an error message for the form to show, or null when it worked.
+  const handleAddColumn = async (label: string): Promise<string | null> => {
+    try {
+      await apiClient.post(`/projects/${projectId}/columns`, { label });
+      await dispatch(fetchProjectById(projectId));
+      return null;
+    } catch (err: any) {
+      return err?.message || 'Could not add the column. Please try again.';
+    }
+  };
+
+  const handleRemoveColumn = async (key: string) => {
+    try {
+      await apiClient.delete(`/projects/${projectId}/columns/${key}`);
+      await dispatch(fetchProjectById(projectId));
+    } catch (err: any) {
+      window.alert(err?.message || 'Could not remove the column.');
+    }
   };
 
   const handleVisibilityChange = async () => {
@@ -291,9 +316,12 @@ export default function SingleProjectPage() {
       {activeTab === 'board' && (
         <KanbanBoard
           tasks={tasks}
+          columns={columns}
           onSelectTask={(task) => setSelectedTaskId(task._id)}
           onStatusChange={handleStatusChange}
           onAddTask={handleOpenAddTask}
+          onAddColumn={canManage ? handleAddColumn : undefined}
+          onRemoveColumn={canManage ? handleRemoveColumn : undefined}
         />
       )}
 
@@ -325,7 +353,7 @@ export default function SingleProjectPage() {
                   >
                     <td className="p-4 font-semibold text-gray-900">{t.title}</td>
                     <td className="p-4">
-                      <Badge type="status" value={t.status} />
+                      <Badge type="status" value={t.status} label={statusTitle(columns, t.status)} />
                     </td>
                     <td className="p-4">
                       <Badge type="priority" value={t.priority} />

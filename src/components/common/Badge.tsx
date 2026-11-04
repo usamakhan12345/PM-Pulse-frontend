@@ -4,10 +4,12 @@ import { TaskPriority, TaskStatus, Role, WorkspaceRole } from '@/types';
 interface BadgeProps {
   type: 'status' | 'priority' | 'role';
   value: TaskStatus | TaskPriority | Role | WorkspaceRole | string;
+  /** Text to show instead of the value, for example the name of a column the owner added */
+  label?: string;
   className?: string;
 }
 
-export default function Badge({ type, value, className = '' }: BadgeProps) {
+export default function Badge({ type, value, label, className = '' }: BadgeProps) {
   let bg = 'bg-gray-100 text-gray-800';
 
   if (type === 'status') {
@@ -27,6 +29,9 @@ export default function Badge({ type, value, className = '' }: BadgeProps) {
       case 'BLOCKED':
         bg = 'bg-rose-100 text-rose-800 border border-rose-200';
         break;
+      default:
+        // A column the workspace owner added
+        if (value.startsWith('CUSTOM_')) bg = 'bg-violet-100 text-violet-800 border border-violet-200';
     }
   } else if (type === 'priority') {
     switch (value) {
@@ -59,7 +64,7 @@ export default function Badge({ type, value, className = '' }: BadgeProps) {
 
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bg} ${className}`}>
-      {type === 'role' ? value.charAt(0) + value.slice(1).toLowerCase() : value.replace('_', ' ')}
+      {label ?? (type === 'role' ? value.charAt(0) + value.slice(1).toLowerCase() : value.replace(/^CUSTOM_/, '').replace(/_/g, ' '))}
     </span>
   );
 }

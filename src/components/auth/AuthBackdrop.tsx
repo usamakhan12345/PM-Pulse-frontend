@@ -34,14 +34,26 @@ const css = `
 }
 `;
 
-export default function AuthBackdrop() {
+// soft: a much fainter colour wash, for use behind the landing page hero where the page already has its own glow.
+export default function AuthBackdrop({ soft = false }: { soft?: boolean }) {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
       <style>{css}</style>
+      {/* Light colour wash: blue at the top left, through a soft sky tint, to violet at the bottom right */}
+      <div
+        className={`absolute inset-0 bg-gradient-to-br ${
+          soft
+            ? 'from-brand-500/[0.05] via-transparent to-violet-600/[0.06]'
+            : 'from-brand-500/20 via-sky-500/[0.06] to-violet-600/20'
+        }`}
+      />
+      {!soft && <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-sky-400/[0.08] to-transparent" />}
       {/* Soft glows */}
-      <div className="auth-drift-a absolute -top-40 -left-32 w-[560px] h-[560px] rounded-full bg-brand-500/25 blur-[120px]" />
-      <div className="auth-drift-b absolute -bottom-48 -right-24 w-[620px] h-[620px] rounded-full bg-indigo-600/25 blur-[130px]" />
-      <div className="auth-pulse absolute top-1/3 left-1/2 -translate-x-1/2 w-[420px] h-[420px] rounded-full bg-sky-500/10 blur-[110px]" />
+      <div className={soft ? 'opacity-30' : undefined}>
+        <div className="auth-drift-a absolute -top-40 -left-32 w-[560px] h-[560px] rounded-full bg-brand-500/25 blur-[120px]" />
+        <div className="auth-drift-b absolute -bottom-48 -right-24 w-[620px] h-[620px] rounded-full bg-indigo-600/25 blur-[130px]" />
+        <div className="auth-pulse absolute top-1/3 left-1/2 -translate-x-1/2 w-[420px] h-[420px] rounded-full bg-sky-500/10 blur-[110px]" />
+      </div>
 
       {/* Large logo marks */}
       <div className="absolute inset-0 auth-float-a">

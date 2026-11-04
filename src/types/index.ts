@@ -2,7 +2,8 @@
 export type Role = 'ADMIN' | 'USER';
 // A person's role inside one workspace
 export type WorkspaceRole = 'OWNER' | 'MEMBER';
-export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE' | 'BLOCKED';
+// TODO, IN_PROGRESS, IN_REVIEW, DONE or BLOCKED, or the key of a column the workspace owner added to the project
+export type TaskStatus = string;
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type ProjectStatus = 'PLANNING' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'ARCHIVED';
 
@@ -43,6 +44,8 @@ export interface Project {
   members: User[];
   status: ProjectStatus;
   isPrivate?: boolean;
+  // Kanban columns added by the workspace owner, shown between "In Review" and "Done"
+  customColumns?: { key: string; label: string }[];
   startDate?: string;
   dueDate?: string;
   taskStats?: {

@@ -7,6 +7,7 @@ import { createTask } from '@/store/slices/taskSlice';
 import { TaskPriority, TaskStatus, User } from '@/types';
 import apiClient from '@/api/client';
 import { loadAssignees } from '@/lib/assignees';
+import { useProjectColumns } from '@/hooks/useProjectColumns';
 
 interface TaskCreateModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export default function TaskCreateModal({
   const [labels, setLabels] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const columns = useProjectColumns(projectId);
 
   useEffect(() => {
     setStatus(defaultStatus);
@@ -127,11 +129,11 @@ export default function TaskCreateModal({
               onChange={(e) => setStatus(e.target.value as TaskStatus)}
               className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
-              <option value="TODO">To Do</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="IN_REVIEW">In Review</option>
-              <option value="DONE">Done</option>
-              <option value="BLOCKED">Blocked</option>
+              {columns.map((c) => (
+                <option key={c.status} value={c.status}>
+                  {c.title}
+                </option>
+              ))}
             </select>
           </div>
         </div>
